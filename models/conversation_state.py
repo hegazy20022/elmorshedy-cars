@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, Text, TIMESTAMP, ForeignKey, JSON
+from sqlalchemy import Column, Integer, Text, TIMESTAMP, ForeignKey, JSON, Date
 from sqlalchemy.sql import func
 from .base import Base
 
@@ -12,5 +12,8 @@ class ConversationState(Base):
     current_step = Column(Text)
     selected_car_id = Column(Integer, ForeignKey("cars.car_id", ondelete="SET NULL"))
     context = Column(JSON, default=dict)
+
+    daily_message_count = Column(Integer, default=0)
+    last_message_date = Column(Date)
 
     updated_at = Column(TIMESTAMP, server_default=func.now(), onupdate=func.now())

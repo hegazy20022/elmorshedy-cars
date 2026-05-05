@@ -16,6 +16,7 @@ class Settings(BaseSettings):
 
     CACHE_TTL_SECONDS: int = 86400
     CACHE_REPEAT_THRESHOLD: int = 3
+    TELEGRAM_DAILY_MESSAGE_LIMIT: int = 20
 
     TIMEZONE: str = "Africa/Cairo"
 

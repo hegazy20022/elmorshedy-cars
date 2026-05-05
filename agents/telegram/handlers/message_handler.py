@@ -3,6 +3,7 @@ import os
 from telegram import Update, InputMediaPhoto
 from telegram.ext import ContextTypes
 from app.core.database import AsyncSessionLocal
+from app.core.config import settings
 from app.observability.metrics import Metrics
 from agents.telegram.auth import is_owner_chat
 from graph.builder import AgentGraph
@@ -98,6 +99,13 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     return
 
             telegram_user_id = str(user.id)
+
+            # التحقق من الريت ليمت (لغير الأونر)
+            if not is_owner_chat(user.id):
+                msg_count = await chat_service.get_user_message_count_last_24h(telegram_user_id)
+                if msg_count >= settings.TELEGRAM_DAILY_MESSAGE_LIMIT:
+                    await message.reply_text("لقد استنفذت عدد الرسائل المسموح بها، عاود المحاولة بعد 24 ساعة")
+                    return
 
             customer, _ = await customer_service.get_or_create(
                 telegram_user_id=telegram_user_id,

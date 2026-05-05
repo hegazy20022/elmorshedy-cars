@@ -243,3 +243,21 @@ class MemoryService:
 
     async def set_paused_mode(self, telegram_user_id: str):
         return await self.update_state(telegram_user_id, mode="PAUSED")
+
+    async def check_rate_limit(self, telegram_user_id: str, limit: int = 15) -> tuple[bool, int]:
+        state = await self.get_or_create_state(telegram_user_id)
+        today = date.today()
+
+        if state.last_message_date != today:
+            state.last_message_date = today
+            state.daily_message_count = 1
+        else:
+            state.daily_message_count += 1
+
+        await self.db.commit()
+        await self.db.refresh(state)
+
+        if state.daily_message_count > limit:
+            return False, state.daily_message_count
+        
+        return True, state.daily_message_count

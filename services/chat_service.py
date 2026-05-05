@@ -1,7 +1,8 @@
 from typing import Optional, Dict, Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from datetime import datetime, timedelta
+from sqlalchemy import select, func
 
 from models.message import Message
 
@@ -42,3 +43,15 @@ class ChatService:
             .order_by(Message.sent_at.asc())
         )
         return list(result.scalars().all())
+
+    async def get_user_message_count_last_24h(self, telegram_user_id: str) -> int:
+        since = datetime.now() - timedelta(hours=24)
+        result = await self.db.execute(
+            select(func.count(Message.message_id))
+            .where(
+                Message.telegram_user_id == telegram_user_id,
+                Message.sender_type == "user",
+                Message.sent_at >= since
+            )
+        )
+        return result.scalar() or 0
