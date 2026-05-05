@@ -1,0 +1,42 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16
+    container_name: elmorshedy_db
+    restart: always
+    environment:
+      POSTGRES_DB: elmorshedy_cars
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  api:
+    build: .
+    container_name: elmorshedy_api
+    restart: always
+    depends_on:
+      - db
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+
+  dashboard:
+    build: .
+    container_name: elmorshedy_dashboard
+    restart: always
+    depends_on:
+      - api
+    env_file:
+      - .env
+    ports:
+      - "8501:8501"
+    command: streamlit run dashboard/app.py --server.address 0.0.0.0 --server.port 8501
+
+volumes:
+  postgres_data:
