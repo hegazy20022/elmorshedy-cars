@@ -13,25 +13,43 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d elmorshedy_cars"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   api:
     build: .
     container_name: elmorshedy_api
     restart: always
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     env_file:
       - .env
     ports:
       - "8000:8000"
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000
 
+  bot:
+    build: .
+    container_name: elmorshedy_bot
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - .env
+    command: python scripts/run_telegram.py
+
   dashboard:
     build: .
     container_name: elmorshedy_dashboard
     restart: always
     depends_on:
-      - api
+      api:
+        condition: service_started
     env_file:
       - .env
     ports:
